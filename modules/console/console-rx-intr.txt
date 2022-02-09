@@ -1,0 +1,147 @@
+#include <ctype.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "stm32f4xx_hal.h"
+
+#include "cmd.h"
+#include "console.h"
+#include "log.h"
+
+////////////////////////////////////////////////////////////////////////////////
+// Common macros
+////////////////////////////////////////////////////////////////////////////////
+
+#define PROMPT "> "
+
+////////////////////////////////////////////////////////////////////////////////
+// Typedefs and enums
+////////////////////////////////////////////////////////////////////////////////
+
+#define CONSOLE_INTR_BFR_SIZE 80
+#define CONSOLE_CMD_BFR_SIZE 80
+
+struct console_state {
+    char intr_bfr[CONSOLE_INTR_BFR_SIZE];
+    char cmd_buf[CONSOLE_CMD_BFR_SIZE]
+    uint16_t intr_bfr_chars;
+    uint16_t cmd_bfr_chars;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Public global variables and externs
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Private/static variables
+////////////////////////////////////////////////////////////////////////////////
+
+static struct console_state console_state;
+static int log_level = Log_default;
+
+extern UART_HandleTypeDef huart2;
+
+////////////////////////////////////////////////////////////////////////////////
+// Private/Static function declaratins
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Global functions
+////////////////////////////////////////////////////////////////////////////////
+
+// This is called by I/O library functions to output characters.  It overrides
+// a weak implementation.
+function overrides the default (weak) implementation.
+int __io_putchar(int ch)
+{
+	uint8_t c = ch;
+    // TODO non-blocking.
+	HAL_UART_Transmit(&huart2, &c, 1, 100);
+    if (ch == '\n') {
+        c = '\r';
+        HAL_UART_Transmit(&huart2, &c, 1, 100);
+    }
+	return 1;
+}
+
+void console_get_def_cfg(struct console_cfg* cfg)
+{
+    memset(cfg, 0, sizeof(*cfg));
+}
+
+void* console_init(struct console_cfg* cfg)
+{
+    log_debug("In console_init()\n");
+    memset(&console_state, 0, sizeof(console_state));
+    printf("%s", PROMPT);
+    fflush(stdout);
+    return NULL;
+}
+
+static int get_rx_char(char* c)
+{
+    if (console_state.intr_buf_chars == 0)
+        return 0;
+
+    NVIC_DisableIRQ(USART2_IRQn);
+    console_
+    NVIC_EnableIRQ(USART2_IRQn);
+
+
+NVIC_DisableIRQ(IRQn_Type IRQn);
+    char intr_bfr[CONSOLE_INTR_BFR_SIZE];
+    char cmd_buf[CONSOLE_CMD_BFR_SIZE]
+    uint16_t intr_bfr_chars;
+    uint16_t cmd_bfr_chars;
+
+    if 
+}
+
+int console_run(void* handle)
+{
+    uint8_t c;
+
+    while (get_rx_char(&c)) {
+        if (c == '\n' || c == '\r') {
+            console_state.in_bfr[console_state.in_bfr_chars] = '\0';
+            printf("\n");
+            cmd_execute(console_state.in_bfr);
+            console_state.in_bfr_chars = 0;
+            printf("%s", PROMPT);
+            fflush(stdout);
+            continue;
+        }
+        if (c == '\b' || c == '\x7f') {
+            if (console_state.in_bfr_chars > 0) {
+                printf("\b \b");
+                fflush(stdout);
+                console_state.in_bfr_chars--;
+            }
+
+            continue;
+        }
+        if (isprint(c)) {
+            if (console_state.in_bfr_chars < (CONSOLE_IN_BFR_SIZE-1)) {
+                console_state.in_bfr[console_state.in_bfr_chars++] = c;
+                printf("%c", c);
+                fflush(stdout);
+            } else {
+                // No space for char. We ring the bell.
+                printf("\a");
+                fflush(stdout);
+            }
+        }
+    }
+    return 0;
+}            
+
+int console_run_cmd(int argc, char** argv)
+{
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Private/static functions
+////////////////////////////////////////////////////////////////////////////////
+
